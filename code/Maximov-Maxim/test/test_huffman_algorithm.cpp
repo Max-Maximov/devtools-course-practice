@@ -85,3 +85,43 @@ TEST(HuffmanAlgorithmTest, Try_Copy_Object) {
     // Assert
     EXPECT_EQ("anything", newhuff.decode(temp));
 }
+
+TEST(HuffmanAlgorithmTest, Try_Get_Frequencies) {
+    // Arrange
+    HuffmanAlgorithm huff;
+    huff.code("anznaarer");
+
+    // Act & Assert
+    EXPECT_EQ("$a3$e1$n2$r2$z1$~", huff.getFrequencies());
+}
+
+TEST(HuffmanAlgorithmTest, Try_Set_Frequencies) {
+    // Arrange
+    HuffmanAlgorithm huff1, huff2;
+    std::string temp = huff2.code("anznaarer");
+    huff1.code("something for not empty tree");
+
+    // Act
+    huff1.setFrequencies("$a3$e1$n2$r2$z1$~");
+
+    // Assert
+    EXPECT_EQ("anznaarer", huff1.decode(temp));
+}
+
+TEST(HuffmanAlgorithmTest, Exception_When_Try_To_Set_Wrong_Frequencies) {
+    // Arrange
+    HuffmanAlgorithm huff;
+    std::string source = "random string";
+
+    // Act & Assert
+    EXPECT_THROW(huff.setFrequencies(source), std::string);
+}
+
+TEST(HuffmanAlgorithmTest, Exception_When_Try_To_Set_String_Without_Number) {
+    // Arrange
+    HuffmanAlgorithm huff;
+    std::string source = "$a$b2$c3$~";
+
+    // Act & Assert
+    EXPECT_THROW(huff.setFrequencies(source), std::string);
+}

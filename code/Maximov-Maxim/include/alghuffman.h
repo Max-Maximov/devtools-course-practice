@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <list>
 
 #pragma pack(push, 1)
 class Node {
@@ -28,7 +29,7 @@ class Node {
 
 class HuffmanAlgorithm {
  private:
-    Node *_root;
+    std::list<Node> _nodelist;
  public:
     HuffmanAlgorithm();
     ~HuffmanAlgorithm();
@@ -36,6 +37,8 @@ class HuffmanAlgorithm {
     HuffmanAlgorithm& operator=(const HuffmanAlgorithm& a);
     std::string code(std::string source);
     std::string decode(std::string source);
+    std::string getFrequencies();
+    void setFrequencies(std::string freqString);
 };
 
 #endif  // CODE_MAXIMOV_MAXIM_INCLUDE_ALGHUFFMAN_H_

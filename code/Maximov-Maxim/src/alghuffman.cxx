@@ -59,6 +59,7 @@ void Node::copyTree(const Node* tempRoot) {
     }
 }
 
+
 void BuildTable(Node *root, map<char, vector<bool> > *table,
     vector<bool> *key);
 void BuildTable(Node *root, map<char, vector<bool> > *table,
@@ -79,21 +80,15 @@ void BuildTable(Node *root, map<char, vector<bool> > *table,
 }
 
 
-HuffmanAlgorithm::HuffmanAlgorithm():_root(NULL) {}
-HuffmanAlgorithm::~HuffmanAlgorithm() {
-    delete _root;
-}
+HuffmanAlgorithm::HuffmanAlgorithm():_nodelist(0) {}
+HuffmanAlgorithm::~HuffmanAlgorithm() {}
 HuffmanAlgorithm& HuffmanAlgorithm::operator=(const HuffmanAlgorithm& a) {
-    if (_root ==NULL) _root = new Node();
-    _root->copyTree(a._root);
+    _nodelist = a._nodelist;
     return *this;
     }
 
 HuffmanAlgorithm::HuffmanAlgorithm(HuffmanAlgorithm const& copy)
-  : _root(NULL) {
-    _root = new Node();
-    _root->copyTree(copy._root);
-  }
+  : _nodelist(copy._nodelist) {}
 
 std::string HuffmanAlgorithm::code(std::string source) {
     map<char, int> charfreq;
@@ -103,32 +98,36 @@ std::string HuffmanAlgorithm::code(std::string source) {
 
     // Make list of nodes
 
-    list<Node> nodelist;
+    _nodelist.clear();
+    list<Node> tempNodelist;
 
     for (map<char, int>::iterator itr = charfreq.begin(); itr != charfreq.end();
         ++itr) {
         Node p;
         p._c = itr->first;
         p._value = itr->second;
-        nodelist.push_back(p);
+        _nodelist.push_back(p);
     }
 
+    tempNodelist = _nodelist;
+
     // Build tree
-    if (_root != NULL) delete _root;
-    if (nodelist.size() == 1) {
-        _root = new Node();
-        _root->_left = new Node(nodelist.front());
+
+    Node* root;
+    if (tempNodelist.size() == 1) {
+        root = new Node();
+        root->_left = new Node(tempNodelist.front());
     } else {
-        while (nodelist.size() != 1) {
-            nodelist.sort();
-            Node *sonL = new Node(nodelist.front());
-            nodelist.pop_front();
-            Node *sonR = new Node(nodelist.front());
-            nodelist.pop_front();
+        while (tempNodelist.size() != 1) {
+            tempNodelist.sort();
+            Node *sonL = new Node(tempNodelist.front());
+            tempNodelist.pop_front();
+            Node *sonR = new Node(tempNodelist.front());
+            tempNodelist.pop_front();
             Node parent(sonL, sonR);
-            nodelist.push_back(parent);
+            tempNodelist.push_back(parent);
         }
-        _root = new Node(nodelist.front());  // Save root of our tree
+        root = new Node(tempNodelist.front());
     }
 
     // Build table with pairs "character - code"
@@ -136,7 +135,8 @@ std::string HuffmanAlgorithm::code(std::string source) {
     map<char, vector<bool> > table;
     vector<bool> key;
 
-    BuildTable(_root, &table, &key);
+    BuildTable(root, &table, &key);
+    delete root;
 
     // Build final string
 
@@ -147,14 +147,35 @@ std::string HuffmanAlgorithm::code(std::string source) {
             result += (x[n]) ? "1" : "0";
         }
     }
+
     return(result);
 }
 
 std::string HuffmanAlgorithm::decode(std::string source) {
-    Node* p = _root;
-    std::string result;
-    if (p == NULL)
+    Node* root;
+    list<Node> tempNodelist(_nodelist);
+    if (tempNodelist.size() == 0) {
             throw std::string("Have not coded yet");
+    } else {
+        if (tempNodelist.size() == 1) {
+            root = new Node();
+            root->_left = new Node(tempNodelist.front());
+        } else {
+            while (tempNodelist.size() != 1) {
+                tempNodelist.sort();
+                Node *sonL = new Node(tempNodelist.front());
+                tempNodelist.pop_front();
+                Node *sonR = new Node(tempNodelist.front());
+                tempNodelist.pop_front();
+                Node parent(sonL, sonR);
+                tempNodelist.push_back(parent);
+            }
+        root = new Node(tempNodelist.front());
+        }
+    }
+
+    Node* p = root;
+    std::string result;
     for (unsigned int i = 0; i < source.length(); i++) {
         if (source[i] != '1' && source[i] != '0')
             throw std::string("Wrong string");
@@ -164,8 +185,42 @@ std::string HuffmanAlgorithm::decode(std::string source) {
             p = p->_left;
         if (p->_left == NULL && p->_right == NULL) {
             result += p->_c;
-            p = _root;
+            p = root;
         }
     }
+    delete root;
     return (result);
+}
+
+std::string HuffmanAlgorithm::getFrequencies() {
+    std::string result = "$";
+    for (list<Node>::iterator itr = _nodelist.begin(); itr != _nodelist.end();
+        ++itr) {
+        result += itr->_c + std::to_string(itr->_value) + "$";
+    }
+    result += "~";
+    return(result);
+}
+
+void HuffmanAlgorithm::setFrequencies(std::string freqString) {
+    list<Node> tempnodelist;
+    unsigned int itr = 1;
+    while (itr < freqString.length() - 1) {
+        Node newNode;
+        newNode._c = freqString[itr];
+        itr++;
+        std::string valuebuf = "";
+        while (freqString[itr] != '$') {
+            valuebuf += freqString[itr];
+            itr++;
+            if (itr == freqString.length())
+                throw std::string("Wrong string of frequencies");
+        }
+        newNode._value = atoi(valuebuf.c_str());
+        if (newNode._value == 0)
+            throw std::string("Wrong string of frequencies");
+        tempnodelist.push_back(newNode);
+        itr++;
+    }
+    _nodelist = tempnodelist;
 }
